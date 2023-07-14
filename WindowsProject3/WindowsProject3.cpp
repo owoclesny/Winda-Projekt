@@ -6,13 +6,13 @@
 
 
 #define MAX_LOADSTRING 100
+int id = 0;
 
 // Global Variables:
 HINSTANCE hInst;                                // current instance
 WCHAR szTitle[MAX_LOADSTRING];                  // The title bar text
 WCHAR szWindowClass[MAX_LOADSTRING];            // the main window class name
-const int floor_distance = 120;
-std::vector<Czlowiek> kolejkon[5];    //tablica z ludzmi
+Winda winda;
 
 
 // Forward declarations of functions included in this code module:
@@ -62,26 +62,31 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
 }
 
 void mapa(HDC hdc) {
-    int floor_distance = 120;
+
     Graphics graphics(hdc);
     Pen black(Color(255, 0, 0, 0), 5);
     Pen red(Color(255, 255, 0, 0), 5);
+    Bitmap PersonImg(L"steve2.png");
     for (int i = 4;i >= 0;--i) {
         if (i % 2 == 0) graphics.DrawLine(&black, 0,  floor_distance * (i+1), 250, floor_distance * (i + 1));       //rysowanie pieter
         else graphics.DrawLine(&black, 500, floor_distance * (i + 1), 750, floor_distance * (i + 1));
     }
+    int poz = winda.pozycja;
+    graphics.DrawLine(&red, 251, 0 + poz, 499, 0 + poz);                                    //rysowanie windy
+    graphics.DrawLine(&red, 251, 0 + poz, 251, floor_distance + poz);
+    graphics.DrawLine(&red, 499, 0 + poz, 499, floor_distance + poz);
+    graphics.DrawLine(&red, 251, floor_distance + poz, 499, floor_distance + poz);
 
-    graphics.DrawLine(&red, 251, 0, 499, 0);                                    //rysowanie windy
-    graphics.DrawLine(&red, 251, 0, 251, floor_distance);
-    graphics.DrawLine(&red, 499, 0, 499, floor_distance);
-    graphics.DrawLine(&red, 251, floor_distance, 499, floor_distance);
 
     for (int i = 0;i <= 4; ++i) {
         for (auto& man : kolejkon[i]) {
-            Bitmap PersonImg(L"steve2.png");
             Rect PersonSpace(man.z, man.y, PersonImg.GetWidth() / 2, PersonImg.GetHeight() / 2);
             graphics.DrawImage(&PersonImg, PersonSpace);
         }
+    }
+    for (auto& man : winda.srodek) {
+        Rect PersonSpace(man.z, floor_distance + poz - 60, PersonImg.GetWidth() / 2, PersonImg.GetHeight() / 2);
+        graphics.DrawImage(&PersonImg, PersonSpace);
     }
 }
 
@@ -89,12 +94,14 @@ void guzik(int wmId) {              //generowanie ludzi oczekujacych na winde i 
     int pietro = wmId / 10;
     int cel = wmId % 10;
     if (pietro % 2 == 0) {
-        Czlowiek ludz(50+10*kolejkon[pietro].size(),60+floor_distance*(4-pietro),cel ,pietro);
+        Czlowiek ludz(50+10*kolejkon[pietro].size(),60+floor_distance*(4-pietro),cel ,pietro, ++id);
         kolejkon[pietro].push_back(ludz);
+        winda.wezwanie(ludz);
     }
     else {
-        Czlowiek ludz(700 - 10 * kolejkon[pietro].size(), 60 + floor_distance * (4 - pietro), cel, pietro);
+        Czlowiek ludz(700 - 10 * kolejkon[pietro].size(), 60 + floor_distance * (4 - pietro), cel, pietro, ++id);
         kolejkon[pietro].push_back(ludz);
+        winda.wezwanie(ludz);
     }
     
     
@@ -247,6 +254,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     case WM_TIMER:
         InvalidateRect(hWnd, NULL, TRUE); //nowe wygenerowanie ekranu
+        winda.ruch();
         break;
     default:
         return DefWindowProc(hWnd, message, wParam, lParam);
