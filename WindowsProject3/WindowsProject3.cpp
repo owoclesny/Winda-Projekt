@@ -88,6 +88,19 @@ void mapa(HDC hdc) {
         Rect PersonSpace(man.z, floor_distance + poz - 60, PersonImg.GetWidth() / 2, PersonImg.GetHeight() / 2);
         graphics.DrawImage(&PersonImg, PersonSpace);
     }
+
+    TextOut(hdc, 900, 50, L"UdŸwig(maks 600kg/8 osob):", 27);
+    if (winda.srodek.size() != 0) {
+        wchar_t udzwig[4];
+        swprintf(udzwig, 4, L"%d", winda.srodek.size() * 70);
+        TextOut(hdc, 1100, 50, udzwig, 3);
+        if (winda.srodek.size() > 8){
+            TextOut(hdc, 900, 70, L"Nie ladzia :(", 14);
+            }
+    }
+    else {
+        TextOut(hdc, 1100, 50, L"0", 2);
+    }
 }
 
 void guzik(int wmId) {              //generowanie ludzi oczekujacych na winde i dodawanie ich do kolejki dla kazdego pietra
@@ -242,18 +255,45 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         break;
     case WM_PAINT:
         {
-            PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(hWnd, &ps);
-            mapa(hdc);
-            // TODO: Add any drawing code that uses hdc here...
-            EndPaint(hWnd, &ps);
-        }
+        PAINTSTRUCT ps;
+        HDC hdc = BeginPaint(hWnd, &ps);
+        // create memory DC and memory bitmap where we shall do our drawing
+
+        HDC memDC = CreateCompatibleDC(hdc);
+
+        // get window's client rectangle. We need this for bitmap creation.
+        RECT rcClientRect;
+        GetClientRect(hWnd, &rcClientRect);
+
+        // now we can create bitmap where we shall do our drawing
+        HBITMAP bmp = CreateCompatibleBitmap(hdc,
+            rcClientRect.right - rcClientRect.left,
+            rcClientRect.bottom - rcClientRect.top);
+
+        // we need to save original bitmap, and select it back when we are done,
+        // in order to avoid GDI leaks!
+        HBITMAP oldBmp = (HBITMAP)SelectObject(memDC, bmp);
+        FillRect(memDC, &rcClientRect, (HBRUSH)(COLOR_WINDOW + 1));
+        mapa(memDC);
+
+        BitBlt(hdc, 0, 0, rcClientRect.right - rcClientRect.left,
+            rcClientRect.bottom - rcClientRect.top, memDC, 0, 0, SRCCOPY);
+
+        // all done, now we need to cleanup
+        SelectObject(memDC, oldBmp); // select back original bitmap
+        DeleteObject(bmp); // delete bitmap since it is no longer required
+        DeleteDC(memDC);   // delete memory DC since it is no longer required
+        EndPaint(hWnd, &ps);
+    }
         break;
+    case WM_ERASEBKGND:
+        return 1;
     case WM_DESTROY:
         PostQuitMessage(0);
         break;
     case WM_TIMER:
         InvalidateRect(hWnd, NULL, TRUE); //nowe wygenerowanie ekranu
+        winda.reset();
         winda.ruch();
         break;
     default:

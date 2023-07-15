@@ -6,7 +6,6 @@ public:
 		int zcel;
 		int zcel2;
 		int y;
-		int waga = 70;
 		int cel;
 		int poczatek;
 		int id;

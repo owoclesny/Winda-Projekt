@@ -5,13 +5,12 @@ const int floor_distance = 120;
 std::vector<Czlowiek> kolejkon[5];    //tablica z ludzmi
 class Winda {
 public:
-	int pozycja = 0;
-	int waga = 0;
-	int pietro = 4;
+	int pozycja = floor_distance*4;
+	int pietro = 0;
 	int status = 0; //0- wolna, 1- zajeta
-	int cel = 4;
+	int cel = 0;
 	std::vector<Czlowiek> ludzie;
-	std::vector<int> przystanki{ 4 };
+	std::vector<int> przystanki{ 0 };
 	std::vector<Czlowiek> srodek;
 	void droga(int p, int c);
 	void ruch();
@@ -19,7 +18,16 @@ public:
 	bool chetni(int p);
 	void stop(int p);
 	void sprawdz();
+	void reset();
+	ULONGLONG licznik;
 };
+
+void Winda::reset() {
+	if (licznik + 5000 < GetTickCount64() and przystanki.size() == 1) {
+		droga(pietro, 0);
+		pietro = 0;
+	}
+}
 
 bool Winda::chetni(int p) {
 
@@ -28,7 +36,7 @@ bool Winda::chetni(int p) {
 			int tenid = man.id;
 			if (man.cel == drg) {
 
-				if (man.z != man.zcel) {
+				if (abs(man.z-man.zcel)>10) {
 					if (p % 2 == 0) {
 						man.idz = 2;
 						break;
@@ -59,7 +67,7 @@ bool Winda::chetni(int p) {
 	for (auto& man : srodek) {
 		if (man.cel == p) {
 			int tenid = man.id;
-			if (man.z != man.zcel2) {
+			if (abs(man.z-man.zcel2)>10) {
 				if (p % 2 == 0) {
 					man.idz = 1;
 				}
@@ -126,11 +134,16 @@ void Winda::stop(int p) {
 }
 
 void Winda::ruch() {
-	if ((pozycja) < (4 - (przystanki[0])) * floor_distance) {
+	if (srodek.size() > 8) {
+		licznik = GetTickCount64();
+	}
+	else if ((pozycja) < (4 - (przystanki[0])) * floor_distance) {
 		pozycja = pozycja + 2;
+		licznik = GetTickCount64();
 	}
 	else if ((pozycja) > (4 - (przystanki[0])) * floor_distance) {
 		pozycja = pozycja - 2;
+		licznik = GetTickCount64();
 	}
 	else {
 		if (chetni(przystanki[0])) {
@@ -150,6 +163,7 @@ void Winda::ruch() {
 					man.z = man.z + 2;
 				}
 			}
+			licznik = GetTickCount64();
 		}
 		else {
 			stop(przystanki[0]);
