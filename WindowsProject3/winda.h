@@ -36,13 +36,25 @@ bool Winda::chetni(int p) {
 			int tenid = man.id;
 			if (man.cel == drg) {
 
-				if (abs(man.z-man.zcel)>10) {
+				if (abs(man.z-man.zcel)>4 and srodek.size()<=7) {
 					if (p % 2 == 0) {
 						man.idz = 2;
 						break;
 					}
 					else {
 						man.idz = 1;
+						break;
+					}
+				}
+				else if (abs(man.z - man.zcel) > 4 and srodek.size() > 7) {
+					if (p % 2 == 0) {
+						man.idz = 0;
+						man.z = man.z - 20;
+						break;
+					}
+					else {
+						man.idz = 0;
+						man.z = man.z + 20;
 						break;
 					}
 				}
